@@ -140,4 +140,45 @@ contract LamportVerifierTest is Test {
         assertTrue(verifier.verify(digest, signature, publicKey));
     }
 
+    //test changing the commitment
+    function testCommitmentChanges() public {
+        bytes32[2][256] memory publicKey;
+        bytes32 comm = verifier.computeCommitment(publicKey);
+        publicKey[88][1] = bytes32(uint256(1));
+        bytes32 comm2 = verifier.computeCommitment(publicKey);
+        assertNotEq(comm, comm2);
+    }
+
+    //test verifying with commitment
+    function testValidSigWithCommitment() public {
+        bytes32 digest = bytes32(0);
+        bytes32[256] memory signature;
+        bytes32[2][256] memory publicKey;
+
+        //test values:
+        for (uint256 i = 0; i < 256; i++) {
+            signature[i] = bytes32(i + 1);
+            publicKey[i][0] = sha256(abi.encodePacked(signature[i]));
+        }
+        bytes32 expectedCommit = verifier.computeCommitment(publicKey);
+
+        assertTrue(verifier.verifyWithCommitment(digest, signature, publicKey, expectedCommit));
+    }
+
+    function testCommitRejectModUnusedPK() public {
+        bytes32 digest = bytes32(0);
+        bytes32[256] memory signature;
+        bytes32[2][256] memory publicKey;
+
+        //test values:
+        for (uint256 i = 0; i < 256; i++) {
+            signature[i] = bytes32(i + 1);
+            publicKey[i][0] = sha256(abi.encodePacked(signature[i]));
+        }
+        bytes32 expectedCommit = verifier.computeCommitment(publicKey);
+        publicKey[88][1] = bytes32(uint256(999));
+        assertFalse(verifier.verifyWithCommitment(digest, signature, publicKey, expectedCommit));
+        
+    }
+
 }

@@ -20,4 +20,18 @@ contract LamportVerifier {
         }
         return true;
     }
+
+    //to compute the commitment
+    function computeCommitment(bytes32[2][256] memory publicKey) public pure returns (bytes32){
+        return sha256(abi.encode(publicKey));
+    }
+
+    //verification function with commitments
+    function verifyWithCommitment(bytes32 digest, bytes32[256] memory signature, bytes32[2][256] memory publicKey, bytes32 expectedCommit) public pure returns (bool){
+        
+        if (computeCommitment(publicKey) != expectedCommit) {
+            return false;
+        }
+        return verify(digest, signature, publicKey);
+    }
 }
